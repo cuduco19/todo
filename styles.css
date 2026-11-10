@@ -76,13 +76,24 @@ li.task {
 }
 
 li.task .text {
-    flex: 1;
+    word-break: break-word;   /* Breaks long words safely if they hit the wall */
+    overflow-wrap: anywhere;  /* Ensures ultra-long strings (like links) won't overflow */
+    white-space: normal;      /* Overrides any clipping behavior */
+    padding-right: 0.5rem;    /* Keeps text from hugging the buttons too tightly */
 }
 
 li.task.completed .text {
     text-decoration: line-through;
     color: var(--muted);
 }
+
+/* 2. Upgrade the edit input box so it handles its parent flex correctly */
+li.task .edit-input {
+    flex: 1;
+    min-width: 0;             /* Allows the input to shrink smaller than default */
+    width: 100%;              /* Forces it to safely occupy the flex track */
+}
+
 
 button.small {
     padding: 0.4rem 0.6rem;
@@ -125,4 +136,33 @@ button.small {
     background: var(--accent);
     color: white;
     border-color: var(--accent);
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN (FOR SMALL SCREENS)
+   ========================================== */
+
+/* Triggers when the screen width drops below 400px */
+@media (max-width: 400px) {
+    /* 1. Stack the input form vertically */
+    #task-form {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    #task-input, 
+    #task-form button {
+        width: 100%; /* Make them stretch full-width */
+    }
+
+    /* 2. Stack the clear action buttons vertically */
+    .actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .actions button {
+        width: 100%;
+    }
+    
 }

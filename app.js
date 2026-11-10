@@ -44,7 +44,6 @@ function renderTasks(){
         return;
     }
 
-    console.log(currentFilter);
     // Render only the filtered set of tasks
     filteredTasks.forEach(task => {      
         const li = document.createElement('li');
