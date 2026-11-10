@@ -97,3 +97,32 @@ button.small {
     justify-content: space-between;
     margin-top: 1rem;
 }
+
+/* ==========================================
+   FILTERS STYLING
+   ========================================== */
+.filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.filter-btn {
+    flex: 1;
+    padding: 0.4rem;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid #e6e9ee;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.filter-btn:hover {
+    background: rgba(2, 6, 23, 0.02);
+}
+
+.filter-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}

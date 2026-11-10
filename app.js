@@ -5,7 +5,13 @@ const tasksList = document.getElementById('tasks');
 const clearCompletedBtn = document.getElementById('clear-completed');
 const clearAllBtn = document.getElementById('clear-all');
 
+// NEW: Select all filter buttons and their container
+const filtersContainer = document.querySelector('.filters');
+const filterButtons = document.querySelectorAll('.filter-btn');
+
+
 let tasks = []; //{id, text, completed}
+let currentFilter = 'all'; // NEW: Track the currently active filter ('all', 'active', 'completed')
 
 // Load tasks from local storage
 function loadTasks() {
@@ -24,13 +30,23 @@ function saveTasks(){
 function renderTasks(){
     tasksList.innerHTML = ''; // clear
 
+    // NEW: Filter the tasks array based on the active filter state before rendering
+    let filteredTasks = tasks;
+    if (currentFilter === 'active') {
+        filteredTasks = tasks.filter(task => !task.completed);
+    } else if (currentFilter === 'completed') {
+        filteredTasks = tasks.filter(task => task.completed);
+    }
    
-    if(tasks.length === 0){
-        tasksList.innerHTML = '<li class="task">There are not tasks to complete.</li>';
+    // Check if the filtered list is empty
+    if(filteredTasks.length === 0){
+        tasksList.innerHTML = `<li class="task">There are no ${currentFilter === 'all' ? '' : currentFilter} tasks.</li>`;
         return;
     }
 
-    tasks.forEach(task => {      
+    console.log(currentFilter);
+    // Render only the filtered set of tasks
+    filteredTasks.forEach(task => {      
         const li = document.createElement('li');
         li.className = task.completed? 'task completed': 'task';
         li.dataset.id = task.id;
@@ -154,6 +170,22 @@ tasksList.addEventListener('click', (e) => {
             }
         });
     }
+});
+
+// NEW: Event delegation layout for filter buttons switching
+filtersContainer.addEventListener('click', (e) => {
+    const clickedBtn = e.target.closest('.filter-btn');
+    if (!clickedBtn) return;
+
+    // 1. Update active styling class on buttons
+    filterButtons.forEach(btn => btn.classList.remove('active'));
+    clickedBtn.classList.add('active');
+
+    // 2. Change the current active filter string value
+    currentFilter = clickedBtn.dataset.filter;
+
+    // 3. Trigger a re-render cycle to show filtered tasks
+    renderTasks();
 });
 
 // Clear completed
