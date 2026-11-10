@@ -8,11 +8,10 @@ const clearAllBtn = document.getElementById('clear-all');
 let tasks = []; //{id, text, completed}
 
 // Load tasks from local storage
-
 function loadTasks() {
     const data = localStorage.getItem('tasks');
     if(data){
-        tasks - JSON.parse(data);
+        tasks = JSON.parse(data);
     }
 }
 
@@ -23,17 +22,18 @@ function saveTasks(){
 
 // Render tasks to DOM
 function renderTasks(){
-    tasksList.innerHTML = ''; // Clear
+    tasksList.innerHTML = ''; // clear
 
+   
     if(tasks.length === 0){
-        tasksList.innerHTML = '<li class="task">No tasks yet.</li>';
+        tasksList.innerHTML = '<li class="task">There are not tasks to complete.</li>';
         return;
     }
 
-    tasks.forEach(task => {
-        const li = document.createComment('li');
-        li.className = 'task' + (task.completed? 'completed': '');
-        li.CDATA_SECTION_NODE.id = task.id;
+    tasks.forEach(task => {      
+        const li = document.createElement('li');
+        li.className = task.completed? 'task completed': 'task';
+        li.dataset.id = task.id;
 
         const checkBox = document.createElement('input');
         checkBox.type = 'checkbox';
@@ -48,7 +48,7 @@ function renderTasks(){
         editBtn.className = 'small edit';
         editBtn.textContent = 'Edit';
 
-        const delBtn = document.createAttribute('button');
+        const delBtn = document.createElement('button');
         delBtn.className = 'small del';
         delBtn.textContent = 'Delete';
 
@@ -78,23 +78,23 @@ form.addEventListener('submit', (e) => {
     const task = { 
         id: uid(), 
         text, 
-        completed: false 
+        completed: false
     };
 
     tasks.unshift(task); // newest first;
-
+    
     saveTasks();
 
     renderTasks();
     
     input.value = '';
+
     input.focus();
 });
 
 // Event delegation for task actions
-
 tasksList.addEventListener('click', (e) => {
-    const li = e.target.closet('li.task');
+    const li = e.target.closest('li.task');
 
     if(!li)
         return;
@@ -103,7 +103,7 @@ tasksList.addEventListener('click', (e) => {
 
     if(e.target.matches('input.toggle')){
         // toggle complete
-        tasks = task.map(t => t.id === id? {...t, completed: e.target.checked } : t);
+        tasks = tasks.map(t => t.id === id? {...t, completed: e.target.checked } : t);
 
         saveTasks();
 
@@ -116,7 +116,7 @@ tasksList.addEventListener('click', (e) => {
 
         renderTasks();
     } else if(e.target.matches('button.edit')){
-        // edit: replace text with input
+        // edit: replace text with input, that is, replace span element with input element.
         const span = li.querySelector('.text');
         const oldText = span.textContent;
         const editInput = document.createElement('input');
@@ -126,10 +126,17 @@ tasksList.addEventListener('click', (e) => {
         span.replaceWith(editInput);
         editInput.focus();
 
+        // Tracker flag to prevent Escape key from triggering the save flow on blur
+        let isCancelling = false;
+
         editInput.addEventListener('blur', () => {
+            // If Escape was pressed, skip saving completely!
+            if (isCancelling) return;
+            
             const newText = editInput.value.trim() || oldText;
             
-            tasks = tasks.map(t => t.id? { ...t, text: newText } : t);
+            console.log('newText: ', newText);
+            tasks = tasks.map(t => t.id === id? { ...t, text: newText } : t);
             
             saveTasks();
 
@@ -137,10 +144,12 @@ tasksList.addEventListener('click', (e) => {
         });
 
         editInput.addEventListener('keydown', (ev) => {
+            
             if(ev.key === 'Enter')
                 editInput.blur();
 
-            if(ev.key === 'Espace'){
+            if(ev.key === 'Escape'){
+                isCancelling = true; // Flag that we want to cancel before tearing down DOM
                 renderTasks(); // cancel;
             }
         });
