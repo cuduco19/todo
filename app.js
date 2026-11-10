@@ -45,7 +45,7 @@ function renderTasks(){
     }
 
     // Render only the filtered set of tasks
-    filteredTasks.forEach(task => {      
+    filteredTasks.forEach((task,index) => {      
         const li = document.createElement('li');
         li.className = task.completed? 'task completed': 'task';
         li.dataset.id = task.id;
@@ -59,16 +59,34 @@ function renderTasks(){
         span.className = 'text';
         span.textContent = task.text;
 
+         // Up Button
+        const upBtn = document.createElement('button');
+        upBtn.className = 'small order-btn move-up';
+        upBtn.textContent = '▲';
+        upBtn.setAttribute('aria-label', `Move task "${task.text}" up`); // FIXED: Added accessible label
+        if (index === 0) upBtn.disabled = true; // Disable if first in the current view
+
+          // Down Button
+        const downBtn = document.createElement('button');
+        downBtn.className = 'small order-btn move-down';
+        downBtn.textContent = '▼';
+        downBtn.setAttribute('aria-label', `Move task "${task.text}" down`); // FIXED: Added accessible label
+        if (index === filteredTasks.length - 1) downBtn.disabled = true; // Disable if last in the current view
+
         const editBtn = document.createElement('button');
         editBtn.className = 'small edit';
         editBtn.textContent = 'Edit';
+        editBtn.setAttribute('aria-label', `Edit task "${task.text}"`); // FIXED: Clarifies button target
 
         const delBtn = document.createElement('button');
         delBtn.className = 'small del';
         delBtn.textContent = 'Delete';
+        delBtn.setAttribute('aria-label', `Delete task "${task.text}"`); // FIXED: Clarifies button target
 
         li.appendChild(checkBox);
         li.appendChild(span);
+        li.appendChild(upBtn);
+        li.appendChild(downBtn);
         li.appendChild(editBtn);
         li.appendChild(delBtn);
 
@@ -130,6 +148,26 @@ tasksList.addEventListener('click', (e) => {
         saveTasks();
 
         renderTasks();
+    } else if(e.target.matches('button.move-up')){
+        // Reorder Up logic
+        const index = tasks.findIndex(t => t.id === id);
+        if (index > 0) {
+            // Modern array swap
+            [tasks[index], tasks[index - 1]] = [tasks[index - 1], tasks[index]];
+            saveTasks();
+            renderTasks();
+        }
+
+    } else if(e.target.matches('button.move-down')){
+        // Reorder Down logic
+        const index = tasks.findIndex(t => t.id === id);
+        if (index < tasks.length - 1) {
+            // Modern array swap
+            [tasks[index], tasks[index + 1]] = [tasks[index + 1], tasks[index]];
+            saveTasks();
+            renderTasks();
+        }
+
     } else if(e.target.matches('button.edit')){
         // edit: replace text with input, that is, replace span element with input element.
         const span = li.querySelector('.text');
