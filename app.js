@@ -315,6 +315,8 @@ function saveTasks(){
 
 // Render tasks to DOM
 function renderTasks(){
+    // PERFORMANCE MEASUREMENT: Start high-resolution timer
+    const startTime = performance.now();
     tasksList.innerHTML = ''; // clear
 
     // NEW: Filter the tasks array based on the active filter state before rendering
@@ -379,6 +381,10 @@ function renderTasks(){
 
         tasksList.appendChild(li);
     });
+
+    // PERFORMANCE MEASUREMENT: Calculate and log duration
+    const endTime = performance.now();
+    console.log(`Render time for ${filteredTasks.length} tasks: ${(endTime - startTime).toFixed(4)} ms`);
 }
 
 // Utility to generate unique id
