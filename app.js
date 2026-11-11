@@ -96,10 +96,12 @@ function updateTaskElement(li, task, index, totalCount) {
 
     // Update arrow button states based on new index positions
     const upBtn = li.querySelector('.move-up');
-    if (upBtn) upBtn.disabled = (index === 0);
+    if (upBtn) 
+        upBtn.disabled = (index === 0);
 
     const downBtn = li.querySelector('.move-down');
-    if (downBtn) downBtn.disabled = (index === totalCount - 1);
+    if (downBtn) 
+        downBtn.disabled = (index === totalCount - 1);
 }
 
 // Optimized Render Tasks with Keyed Reconciliation & Performance Performance Tracking
