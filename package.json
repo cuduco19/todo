@@ -1,0 +1,14 @@
+{
+  "name": "todo",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "esbuild styles/main.css --bundle --minify --external:*.webp --outfile=dist/styles/main.min.css && esbuild scripts/main.js --bundle --minify --outfile=dist/scripts/main.min.js"
+  },
+  "keywords": [],
+  "author": "Eliot Cuduco",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

@@ -1,5 +1,5 @@
 import { loadTasks, saveTasks, uid } from "./storage.js";
-import { renderTasks } from "./dom.js";
+import { renderTasks } from "./render.js";
 
 const form = document.getElementById("task-form");
 const input = document.getElementById("task-input");
