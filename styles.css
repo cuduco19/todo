@@ -64,7 +64,6 @@ input:focus-visible {
 }
 
 ul#tasks {
-    display: flex;
     list-style: none;
     margin: 1rem 0 0;
     padding: 0;
