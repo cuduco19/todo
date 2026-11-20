@@ -18,7 +18,7 @@ body {
     width: 100%;
     max-width: 540px;
     background: var(--card);
-    border-radius: 10px;
+    border-radius: 9px;
     padding: 1.25rem;
     box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
 }
