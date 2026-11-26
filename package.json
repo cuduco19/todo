@@ -1,6 +1,7 @@
 {
   "name": "todo",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "scripts": {
     "build": "node build.js"
