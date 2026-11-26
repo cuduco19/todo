@@ -12,7 +12,7 @@ namespace TodoApi.Controllers;
 public class TasksController(AppDbContext db) : ControllerBase
 {
     private string GetCurrentUserId() =>
-        User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "demo-user";
+        User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "demo-user";
 
     private static TaskResponse ToResponse(TodoItem item) =>
         new(item.Id, item.Title, item.IsCompleted, item.SortOrder, item.CreatedAt);
