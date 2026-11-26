@@ -14,9 +14,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
+// app.UseAuthentication(); // Uncomment once you configure AddAuthentication().AddJwtBearer()
+//app.UseAuthorization();
 
 app.MapControllers();
 
