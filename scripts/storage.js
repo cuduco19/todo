@@ -1,5 +1,5 @@
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000/api/tasks'
+  ? 'http://localhost:5119/api/tasks'
   : '/api/tasks';
 
 async function request(url = '', options = {}) {
