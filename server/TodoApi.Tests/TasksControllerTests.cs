@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +12,7 @@ namespace TodoApi.Tests;
 
 public class TasksControllerTests : IDisposable
 {
+    private const string TestUserId = "demo-user";
     private readonly SqliteConnection _connection;
     private readonly AppDbContext _db;
     private readonly TasksController _controller;
@@ -27,7 +30,21 @@ public class TasksControllerTests : IDisposable
         _db = new AppDbContext(options);
         _db.Database.EnsureCreated();
 
-        _controller = new TasksController(_db);
+        _controller = CreateControllerForUser(TestUserId);
+    }
+
+    private TasksController CreateControllerForUser(string userId)
+    {
+        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId) };
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
+        return new TasksController(_db)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal }
+            }
+        };
     }
 
     public void Dispose()
@@ -58,8 +75,10 @@ public class TasksControllerTests : IDisposable
     [Fact]
     public async Task CreateTask_WithWhitespaceOnly_ReturnsBadRequest()
     {
+        // Act
         var result = await _controller.CreateTask(new CreateTaskRequest("   "));
 
+        // Assert
         Assert.IsType<BadRequestObjectResult>(result.Result);
     }
 
@@ -68,8 +87,8 @@ public class TasksControllerTests : IDisposable
     {
         // Arrange
         _db.Tasks.AddRange(
-            new TodoItem { Title = "Active Task", IsCompleted = false, SortOrder = 0 },
-            new TodoItem { Title = "Completed Task", IsCompleted = true, SortOrder = 1 }
+            new TodoItem { UserId = TestUserId, Title = "Active Task", IsCompleted = false, SortOrder = 0 },
+            new TodoItem { UserId = TestUserId, Title = "Completed Task", IsCompleted = true, SortOrder = 1 }
         );
         await _db.SaveChangesAsync();
 
@@ -94,7 +113,7 @@ public class TasksControllerTests : IDisposable
     public async Task UpdateTask_UpdatesTitleAndCompletionStatus()
     {
         // Arrange
-        var task = new TodoItem { Title = "Original Title", IsCompleted = false, SortOrder = 0 };
+        var task = new TodoItem { UserId = TestUserId, Title = "Original Title", IsCompleted = false, SortOrder = 0 };
         _db.Tasks.Add(task);
         await _db.SaveChangesAsync();
 
@@ -112,9 +131,9 @@ public class TasksControllerTests : IDisposable
     public async Task ReorderTasks_UpdatesSortOrderAtomically()
     {
         // Arrange
-        var t1 = new TodoItem { Title = "Task 1", SortOrder = 0 };
-        var t2 = new TodoItem { Title = "Task 2", SortOrder = 1 };
-        var t3 = new TodoItem { Title = "Task 3", SortOrder = 2 };
+        var t1 = new TodoItem { UserId = TestUserId, Title = "Task 1", SortOrder = 0 };
+        var t2 = new TodoItem { UserId = TestUserId, Title = "Task 2", SortOrder = 1 };
+        var t3 = new TodoItem { UserId = TestUserId, Title = "Task 3", SortOrder = 2 };
         _db.Tasks.AddRange(t1, t2, t3);
         await _db.SaveChangesAsync();
 
@@ -134,7 +153,7 @@ public class TasksControllerTests : IDisposable
     public async Task DeleteTask_RemovesSingleTask_AndReturnsNotFoundIfMissing()
     {
         // Arrange
-        var task = new TodoItem { Title = "Delete Me", SortOrder = 0 };
+        var task = new TodoItem { UserId = TestUserId, Title = "Delete Me", SortOrder = 0 };
         _db.Tasks.Add(task);
         await _db.SaveChangesAsync();
 
@@ -152,9 +171,9 @@ public class TasksControllerTests : IDisposable
     {
         // Arrange
         _db.Tasks.AddRange(
-            new TodoItem { Title = "Keep Me", IsCompleted = false, SortOrder = 0 },
-            new TodoItem { Title = "Remove Me 1", IsCompleted = true, SortOrder = 1 },
-            new TodoItem { Title = "Remove Me 2", IsCompleted = true, SortOrder = 2 }
+            new TodoItem { UserId = TestUserId, Title = "Keep Me", IsCompleted = false, SortOrder = 0 },
+            new TodoItem { UserId = TestUserId, Title = "Remove Me 1", IsCompleted = true, SortOrder = 1 },
+            new TodoItem { UserId = TestUserId, Title = "Remove Me 2", IsCompleted = true, SortOrder = 2 }
         );
         await _db.SaveChangesAsync();
 

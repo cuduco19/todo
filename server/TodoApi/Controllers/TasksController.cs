@@ -52,6 +52,9 @@ public class TasksController(AppDbContext db) : ControllerBase
             .Where(t => t.UserId == userId)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.SortOrder, t => t.SortOrder + 1));
 
+        // ExecuteUpdateAsync bypasses EF Core's Change Tracker; clear tracked entities to prevent stale SortOrder values
+        db.ChangeTracker.Clear();
+
         var item = new TodoItem
         {
             UserId = userId,
