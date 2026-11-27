@@ -1,114 +1,179 @@
-import { loadTasks, saveTasks, uid } from "./storage.js";
-import { renderTasks } from "./render.js";
+import {
+  fetchTasks,
+  createTask,
+  updateTask,
+  reorderTasks,
+  deleteTask,
+  bulkDeleteTasks,
+} from './storage.js';
+import { renderTasks } from './render.js';
 
-const form = document.getElementById("task-form");
-const input = document.getElementById("task-input");
-const tasksList = document.getElementById("tasks");
-const clearCompletedBtn = document.getElementById("clear-completed");
-const clearAllBtn = document.getElementById("clear-all");
-const filtersContainer = document.querySelector(".filters");
-const filterButtons = document.querySelectorAll(".filter-btn");
+const taskForm = document.getElementById('task-form');
+const taskInput = document.getElementById('task-input');
+const tasksList = document.getElementById('tasks');
+const clearCompletedBtn = document.getElementById('clear-completed');
+const clearAllBtn = document.getElementById('clear-all');
+const filtersContainer = document.querySelector('.filters');
+const filterButtons = document.querySelectorAll('.filter-btn');
 
-let tasks = loadTasks();
-let currentFilter = "all";
+let tasks = [];
+let currentFilter = 'all';
 
-function sync() {
-    saveTasks(tasks);
+async function loadAndRender() {
+  try {
+    tasks = await fetchTasks('all');
     renderTasks(tasksList, tasks, currentFilter);
+  } catch (err) {
+    console.error('Failed to load tasks:', err);
+    tasksList.innerHTML = '<li class="task">Unable to connect to the task server.</li>';
+  }
 }
 
-form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const text = input.value.trim();
-    if (!text) return;
+taskForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = taskInput.value.trim();
+  if (!text) return;
 
-    tasks.unshift({
-        id: uid(),
-        text,
-        completed: false,
+  taskInput.disabled = true;
+  try {
+    const created = await createTask(text);
+    tasks.unshift(created);
+    renderTasks(tasksList, tasks, currentFilter);
+    taskInput.value = '';
+  } catch (err) {
+    console.error('Failed to create task:', err);
+    alert('Could not save task. Please try again.');
+  } finally {
+    taskInput.disabled = false;
+    taskInput.focus();
+  }
+});
+
+tasksList.addEventListener('click', async (e) => {
+  const taskItem = e.target.closest('li.task');
+  if (!taskItem) return;
+  const id = taskItem.dataset.id;
+
+  if (e.target.matches('input.toggle')) {
+    const isCompleted = e.target.checked;
+    const previous = [...tasks];
+    tasks = tasks.map((t) => (t.id === id ? { ...t, completed: isCompleted } : t));
+    renderTasks(tasksList, tasks, currentFilter);
+
+    try {
+      await updateTask(id, { isCompleted });
+    } catch (err) {
+      console.error('Failed to toggle task:', err);
+      tasks = previous;
+      renderTasks(tasksList, tasks, currentFilter);
+    }
+  } else if (e.target.matches('button.del')) {
+    const previous = [...tasks];
+    tasks = tasks.filter((t) => t.id !== id);
+    renderTasks(tasksList, tasks, currentFilter);
+
+    try {
+      await deleteTask(id);
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+      tasks = previous;
+      renderTasks(tasksList, tasks, currentFilter);
+    }
+  } else if (e.target.matches('button.move-up') || e.target.matches('button.move-down')) {
+    const index = tasks.findIndex((t) => t.id === id);
+    const swapIndex = e.target.matches('button.move-up') ? index - 1 : index + 1;
+    if (index < 0 || swapIndex < 0 || swapIndex >= tasks.length) return;
+
+    const previous = [...tasks];
+    [tasks[index], tasks[swapIndex]] = [tasks[swapIndex], tasks[index]];
+    renderTasks(tasksList, tasks, currentFilter);
+
+    try {
+      await reorderTasks(tasks.map((t) => t.id));
+    } catch (err) {
+      console.error('Failed to reorder tasks:', err);
+      tasks = previous;
+      renderTasks(tasksList, tasks, currentFilter);
+    }
+  } else if (e.target.matches('button.edit')) {
+    const textSpan = taskItem.querySelector('.text');
+    if (!textSpan) return;
+    const originalText = textSpan.textContent;
+    const editInput = document.createElement('input');
+    editInput.type = 'text';
+    editInput.value = originalText;
+    editInput.className = 'edit-input';
+    textSpan.replaceWith(editInput);
+    editInput.focus();
+
+    let canceled = false;
+    editInput.addEventListener('blur', async () => {
+      if (canceled) return;
+      const updatedText = editInput.value.trim() || originalText;
+      if (updatedText === originalText) {
+        renderTasks(tasksList, tasks, currentFilter);
+        return;
+      }
+
+      const previous = [...tasks];
+      tasks = tasks.map((t) => (t.id === id ? { ...t, text: updatedText } : t));
+      renderTasks(tasksList, tasks, currentFilter);
+
+      try {
+        await updateTask(id, { title: updatedText });
+      } catch (err) {
+        console.error('Failed to edit task:', err);
+        tasks = previous;
+        renderTasks(tasksList, tasks, currentFilter);
+      }
     });
 
-    sync();
-    input.value = "";
-    input.focus();
+    editInput.addEventListener('keydown', (keyEvent) => {
+      if (keyEvent.key === 'Enter') editInput.blur();
+      if (keyEvent.key === 'Escape') {
+        canceled = true;
+        renderTasks(tasksList, tasks, currentFilter);
+      }
+    });
+  }
 });
 
-tasksList.addEventListener("click", (e) => {
-    const li = e.target.closest("li.task");
-    if (!li) return;
-    const id = li.dataset.id;
-
-    if (e.target.matches("input.toggle")) {
-        tasks = tasks.map((t) => (t.id === id ? { ...t, completed: e.target.checked } : t));
-        sync();
-    } else if (e.target.matches("button.del")) {
-        tasks = tasks.filter((t) => t.id !== id);
-        sync();
-    } else if (e.target.matches("button.move-up")) {
-        const index = tasks.findIndex((t) => t.id === id);
-        if (index > 0) {
-            [tasks[index], tasks[index - 1]] = [tasks[index - 1], tasks[index]];
-            sync();
-        }
-    } else if (e.target.matches("button.move-down")) {
-        const index = tasks.findIndex((t) => t.id === id);
-        if (index < tasks.length - 1) {
-            [tasks[index], tasks[index + 1]] = [tasks[index + 1], tasks[index]];
-            sync();
-        }
-    } else if (e.target.matches("button.edit")) {
-        const span = li.querySelector(".text");
-        if (!span) return;
-
-        const oldText = span.textContent;
-        const editInput = document.createElement("input");
-        editInput.type = "text";
-        editInput.value = oldText;
-        editInput.className = "edit-input";
-        span.replaceWith(editInput);
-        editInput.focus();
-
-        let isCancelling = false;
-
-        editInput.addEventListener("blur", () => {
-            if (isCancelling) return;
-            const newText = editInput.value.trim() || oldText;
-            tasks = tasks.map((t) => (t.id === id ? { ...t, text: newText } : t));
-            sync();
-        });
-
-        editInput.addEventListener("keydown", (ev) => {
-            if (ev.key === "Enter") editInput.blur();
-            if (ev.key === "Escape") {
-                isCancelling = true;
-                renderTasks(tasksList, tasks, currentFilter);
-            }
-        });
-    }
+filtersContainer.addEventListener('click', (e) => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  filterButtons.forEach((b) => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.filter;
+  renderTasks(tasksList, tasks, currentFilter);
 });
 
-filtersContainer.addEventListener("click", (e) => {
-    const clickedBtn = e.target.closest(".filter-btn");
-    if (!clickedBtn) return;
+clearCompletedBtn.addEventListener('click', async () => {
+  const previous = [...tasks];
+  tasks = tasks.filter((t) => !t.completed);
+  renderTasks(tasksList, tasks, currentFilter);
 
-    filterButtons.forEach((btn) => btn.classList.remove("active"));
-    clickedBtn.classList.add("active");
-
-    currentFilter = clickedBtn.dataset.filter;
+  try {
+    await bulkDeleteTasks(true);
+  } catch (err) {
+    console.error('Failed to clear completed tasks:', err);
+    tasks = previous;
     renderTasks(tasksList, tasks, currentFilter);
+  }
 });
 
-clearCompletedBtn.addEventListener("click", () => {
-    tasks = tasks.filter((t) => !t.completed);
-    sync();
+clearAllBtn.addEventListener('click', async () => {
+  if (!confirm('Delete all tasks?')) return;
+  const previous = [...tasks];
+  tasks = [];
+  renderTasks(tasksList, tasks, currentFilter);
+
+  try {
+    await bulkDeleteTasks(false);
+  } catch (err) {
+    console.error('Failed to clear all tasks:', err);
+    tasks = previous;
+    renderTasks(tasksList, tasks, currentFilter);
+  }
 });
 
-clearAllBtn.addEventListener("click", () => {
-    if (confirm("Delete all tasks?")) {
-        tasks = [];
-        sync();
-    }
-});
-
-// Initial render
-renderTasks(tasksList, tasks, currentFilter);
+loadAndRender();

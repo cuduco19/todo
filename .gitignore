@@ -13,3 +13,14 @@ desktop.ini
 .vscode/
 .env
 *.log
+
+# .NET / C# build outputs & user files
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+TestResults/
+appsettings.Development.json

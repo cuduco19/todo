@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:5119
+
+### 1. Create First Task
+# @name createFirst
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Verify ASP.NET Core PostgreSQL API"
+}
+
+### 2. Create Second Task
+# @name createSecond
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Wire up front-end fetch client"
+}
+
+### 3. Get All Tasks
+GET {{baseUrl}}/api/tasks?filter=all
+
+### 4. Update First Task
+PATCH {{baseUrl}}/api/tasks/{{createFirst.response.body.id}}
+Content-Type: application/json
+
+{
+  "title": "Verify ASP.NET Core PostgreSQL API (Updated)",
+  "isCompleted": true
+}
+
+### 5. Reorder Tasks Atomically
+PATCH {{baseUrl}}/api/tasks/reorder
+Content-Type: application/json
+
+{
+  "orderedIds": [
+    "{{createFirst.response.body.id}}",
+    "{{createSecond.response.body.id}}"
+  ]
+}
+
+### 6a. Delete Second Task
+DELETE {{baseUrl}}/api/tasks/{{createSecond.response.body.id}}
+
+### 6b. Clear Completed Tasks
+DELETE {{baseUrl}}/api/tasks?completedOnly=true
