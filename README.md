@@ -5,6 +5,7 @@ A fast, persistent, and accessible task manager powered by an **ASP.NET Core 9 R
 ## Live Demo
 
 - **Live Site:** [https://evancru-todo-list.netlify.app](https://evancru-todo-list.netlify.app)
+- **Cold-Start Note:** The back-end API is hosted on Render's free tier, which spins down after 15 minutes of inactivity. If the app has been idle, the initial request may take **30–50 seconds** to wake the container before tasks load; subsequent requests respond immediately.
 
 ## Architecture & Tech Stack
 
@@ -39,13 +40,14 @@ todo/
 │   ├── render.js               # Keyed DOM reconciliation and task element rendering
 │   └── main.js                 # JS entry point (optimistic state updates and event delegation)
 ├── server/
+│   ├── Dockerfile              # Multi-stage .NET 9 container build for Render
 │   ├── TodoSolution.sln        # .NET 9 solution file
 │   ├── TodoApi/
 │   │   ├── Controllers/        # TasksController (REST endpoints & atomic reorder)
 │   │   ├── Data/               # AppDbContext & EF Core PostgreSQL migrations
 │   │   ├── DTOs/               # Request & response records
 │   │   ├── Models/             # TodoItem entity model
-│   │   ├── Program.cs          # DI, Npgsql, OpenAPI, and CORS configuration
+│   │   ├── Program.cs          # DI, Npgsql, OpenAPI, auto-migrations, and CORS configuration
 │   │   └── TodoApi.http        # Executable REST Client API test requests
 │   └── TodoApi.Tests/
 │       └── TasksControllerTests.cs # xUnit integration tests
@@ -109,8 +111,9 @@ cd todo
 
 ## Deployment
 
-- **Front-End:** Configured for static deployment on **Netlify** from `.` (root) using pre-bundled `dist/` assets.
-- **Back-End & Database:** Designed for container/PaaS deployment (e.g., Azure App Service or Render) connected to managed PostgreSQL (e.g., Neon or Supabase).
+- **Front-End (Netlify):** Static site deployed directly from `.` (root) using pre-bundled `dist/` assets.
+- **Back-End API (Render):** Containerized `.NET 9` Web API built via `server/Dockerfile` and hosted on Render's free tier (`512 MB` RAM, `0.1` CPU; spins down after 15 minutes of inactivity and wakes automatically on incoming HTTP requests).
+- **Database (Neon):** Serverless **PostgreSQL** instance with automatic EF Core schema migrations executed on container startup (`db.Database.Migrate()`).
 
 ## Author
 
