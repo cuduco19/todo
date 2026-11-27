@@ -15,17 +15,32 @@ const clearCompletedBtn = document.getElementById('clear-completed');
 const clearAllBtn = document.getElementById('clear-all');
 const filtersContainer = document.querySelector('.filters');
 const filterButtons = document.querySelectorAll('.filter-btn');
+const loadingStatus = document.getElementById('loading-status');
 
 let tasks = [];
 let currentFilter = 'all';
 
 async function loadAndRender() {
+  let wakeTimer;
+
+  if (loadingStatus) {
+    loadingStatus.textContent = 'Loading tasks…';
+    loadingStatus.hidden = false;
+    wakeTimer = setTimeout(() => {
+      loadingStatus.textContent = 'Waking up free-tier server (may take ~30–50s on first visit)…';
+    }, 3000);
+  }
+
   try {
     tasks = await fetchTasks('all');
+    if (loadingStatus) loadingStatus.hidden = true;
     renderTasks(tasksList, tasks, currentFilter);
   } catch (err) {
     console.error('Failed to load tasks:', err);
+    if (loadingStatus) loadingStatus.hidden = true;
     tasksList.innerHTML = '<li class="task">Unable to connect to the task server.</li>';
+  } finally {
+    clearTimeout(wakeTimer);
   }
 }
 

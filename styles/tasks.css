@@ -67,3 +67,10 @@ button.order-btn:disabled {
     opacity: 0.25;
     cursor: not-allowed;
 }
+
+.loading-status {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.75rem 0;
+}
