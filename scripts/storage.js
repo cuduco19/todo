@@ -1,6 +1,6 @@
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5119/api/tasks'
-  : '/api/tasks';
+  : 'https://todo-7jq1.onrender.com/api/tasks';
 
 async function request(url = '', options = {}) {
   const response = await fetch(`${API_BASE_URL}${url}`, {
