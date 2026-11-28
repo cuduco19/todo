@@ -6,7 +6,8 @@ A fast, persistent, and accessible task manager powered by an **ASP.NET Core 9 R
 
 - **Live Site (Netlify):** [https://evancru-todo-list.netlify.app](https://evancru-todo-list.netlify.app)
 - **Live REST API (Render):** [https://todo-7jq1.onrender.com/api/tasks](https://todo-7jq1.onrender.com/api/tasks)
-- **Cold-Start Note:** The back-end API is hosted on Render's free tier, which spins down after 15 minutes of inactivity. If the app has been idle, the initial request may take **30–50 seconds** to wake the container before tasks load; subsequent requests respond immediately.
+- **Health Check Endpoint:** [https://todo-7jq1.onrender.com/ping](https://todo-7jq1.onrender.com/ping)
+- **Uptime Note:** The API includes an in-memory `/ping` liveness probe monitored on a scheduled interval to keep the Render container warm and prevent cold-start delays without waking the Neon PostgreSQL database.
 
 ## Architecture & Tech Stack
 
@@ -108,7 +109,7 @@ cd todo
 ## Deployment
 
 - **Front-End (Netlify):** Static site automatically built via `npm run build` (`esbuild`) and deployed from `.` (root) on every push to `main`.
-- **Back-End API (Render):** Containerized `.NET 9` Web API (`https://todo-7jq1.onrender.com`) built via `server/Dockerfile` and hosted on Render's free tier (`512 MB` RAM, `0.1` CPU; spins down after 15 minutes of inactivity and wakes automatically on incoming HTTP requests).
+- **Back-End API (Render):** Containerized `.NET 9` Web API (`https://todo-7jq1.onrender.com`) built via `server/Dockerfile` and hosted on Render's free tier (`512 MB` RAM, `0.1` CPU), kept warm via scheduled HTTP pings to `/ping` to eliminate cold-start latency.
 - **Database (Neon):** Serverless **PostgreSQL** instance with automatic EF Core schema migrations executed on container startup (`db.Database.Migrate()`).
 
 ## Author

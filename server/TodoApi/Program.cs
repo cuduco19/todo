@@ -38,4 +38,9 @@ app.UseCors("FrontendPolicy");
 //app.UseAuthorization();
 app.MapControllers();
 
+// Lightweight liveness probe for external keep-alive monitors (avoids DB queries)
+app.MapGet("/ping", () => Results.Ok(new { status = "ok", timestamp = DateTime.UtcNow }))
+   .WithName("Ping")
+   .AllowAnonymous();
+
 app.Run();
