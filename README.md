@@ -45,14 +45,15 @@ todo/
 │   ├── Dockerfile              # Multi-stage .NET 9 container build for Render
 │   ├── TodoSolution.sln        # .NET 9 solution file
 │   ├── TodoApi/
-│   │   ├── Controllers/        # TasksController (REST endpoints & atomic reorder)
+│   │   ├── Controllers/        # TasksController & HealthController (REST & liveness endpoints)
 │   │   ├── Data/               # AppDbContext & EF Core PostgreSQL migrations
 │   │   ├── DTOs/               # Request & response records
 │   │   ├── Models/             # TodoItem entity model
 │   │   ├── Program.cs          # DI, Npgsql, OpenAPI, auto-migrations, and CORS configuration
 │   │   └── TodoApi.http        # Executable REST Client API test requests
 │   └── TodoApi.Tests/
-│       └── TasksControllerTests.cs # xUnit integration tests
+│       ├── HealthControllerTests.cs # xUnit health check tests
+│       └── TasksControllerTests.cs  # xUnit integration tests
 ├── package.json                # Front-end build scripts and devDependencies
 └── README.md
 ```
